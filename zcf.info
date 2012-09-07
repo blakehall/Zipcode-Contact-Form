@@ -1,0 +1,3 @@
+name = Zipcode Contact Form
+description = Provides a zipcode lookup form and displays the relevant contact info from a custom database table.
+core = 7.x

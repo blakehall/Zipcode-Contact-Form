@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * Implements hook_install().
+ *
+ * We could use this to provide any necessary setup tasks for our module.
+ */
+
+function zcf_install() {
+
+}
+
+/**
+ * Implements hook_schema().
+ *
+ * This defines the custom tables we need for our zipcode lookup.
+ */
+function zcf_schema() {
+  $schema['zcf'] = array(
+    'description' => 'This table contains our zipcode lookups used to find the appropriate contact info',
+    'fields' => array(
+      'zipcode' => array(
+        'type' => 'varchar',
+        'length' => 15,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'zcf_info_id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('zipcode'),
+  );
+
+  $schema['zcf_info'] = array(
+    'description' => 'This table contains our sales contact info',
+    'fields' => array(
+      'zcf_info_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'phone' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('zcf_info_id'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * We initially forgot a name field in hook_schema.
+ * The schema hook has been updated so that future installations will be initially setup correctly,
+ * but this illustrates how to add a field via an update hook.
+ */
+function zcf_update_7000(&$sandbox) {
+  db_add_field('zcf_info', 'name', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
+}

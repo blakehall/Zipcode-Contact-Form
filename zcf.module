@@ -1,0 +1,112 @@
+<?php
+
+
+/**
+ * Implements hook_menu().
+ *
+ * This is used to map urls to the functions that generate them.
+ */
+function zcf_menu() {
+  $items['zipcode-lookup'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zcf_lookup_form'),
+    // If we needed to lock this page down to users with a specific permission we could implement access arguments
+    //'access arguments' => array('use zipcode contact form'),
+    // We can also specify a custom function name to be used for the access check. The default is user_access().
+    'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Admin configuration form, which will provide the listing of current contacts.
+  $items['admin/settings/zcf'] = array(
+    'page callback' => 'zcf_admin_listing',
+    'access arguments' => array('administer zipcode contact form'),
+    'file' => 'zcf.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Allow the creation of new contact records.
+  $items['admin/settings/zcf/new'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zcf_admin_create'),
+    'access arguments' => array('administer zipcode contact form'),
+    'file' => 'zcf.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Display a detailed view of a particular contact record.
+  // TODO
+  $items['admin/settings/zcf/%zcf_record'] = array();
+
+/*
+  // TODO
+  $items['admin/settings/zcf/%zcf_record/edit'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zcf_admin_create'),
+    'access arguments' => array('administer zipcode contact form'),
+    'file' => 'zcf.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+*/
+  // Provide a confirmation page for deleting a record.
+  // TODO
+  // Hint: take a look at confirm_form().
+  $items['admin/settings/zcf/%zcf_record/delete'] = array();
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function zcf_permission() {
+  return array(
+    'administer zipcode contact form' => array(
+      'title' => t('Administer the zipcode contact form'), 
+      'description' => t('Perform administration tasks for the zipcode contact form.'),
+    ),
+  );
+}
+
+/**
+ * Provides the form definition for the zipcode lookup form.
+ */
+function zcf_lookup_form($form, &$form_state) {
+  // Provide the text field where the user can enter a zipcode.
+  $form['zipcode'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Zipcode'),
+    '#description' => t('Enter your zipcode to find the closest representative'),
+    '#size' => 6,
+  );
+
+  // Our submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Go'),
+  );
+
+  return $form;
+}
+
+/**
+ * The validate handler for our zipcode lookup form.
+ */
+function zcf_lookup_form_validate($form, &$form_state) {
+  $zipcode = $form_state['values']['zipcode'];
+  // Make sure the zipcode the user has entered is numeric.
+  if (!is_numeric($zipcode)) {
+    form_set_error('zipcode', 'Enter a numeric value for a zipcode please');
+  }
+}
+
+/**
+ * The submit handler for our zipcode lookup form.
+ */
+function zcf_lookup_form_submit($form, &$form_state) {
+  drupal_set_message('You submitted the zipcode: ' .$form_state['values']['zipcode']);
+}
+
+
+// hook_block_info
+// hook_block_view
