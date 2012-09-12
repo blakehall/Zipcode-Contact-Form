@@ -3,9 +3,8 @@
 /**
  * Implements hook_install().
  *
- * We could use this to provide any necessary setup tasks for our module.
+ * We could use this to provide any necessary setup tasks for our module
  */
-
 function zcf_install() {
 
 }

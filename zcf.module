@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Implements hook_menu().
  *
@@ -35,25 +34,34 @@ function zcf_menu() {
   );
 
   // Display a detailed view of a particular contact record.
-  // TODO
-  $items['admin/settings/zcf/%zcf_record'] = array();
-
-/*
-  // TODO
-  $items['admin/settings/zcf/%zcf_record/edit'] = array(
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('zcf_admin_create'),
+  $items['admin/settings/zcf/%zcf_record'] = array(
+    'page callback' => 'zcf_record_show',
+    'page arguments' => array(3),
     'access arguments' => array('administer zipcode contact form'),
     'file' => 'zcf.admin.inc',
     'type' => MENU_NORMAL_ITEM,
   );
-*/
+
+  $items['admin/settings/zcf/%zcf_record/edit'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('zcf_admin_create', 3),
+    'access arguments' => array('administer zipcode contact form'),
+    'file' => 'zcf.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
   // Provide a confirmation page for deleting a record.
-  // TODO
-  // Hint: take a look at confirm_form().
+  // TODO look at confirm_form() for an example.
   $items['admin/settings/zcf/%zcf_record/delete'] = array();
 
   return $items;
+}
+
+/**
+ * Our menu loader for zcf contact records.
+ */
+function zcf_record_load($id) {
+  return db_query("SELECT * FROM {zcf_info} WHERE zcf_info_id = :id", array(':id' => $id))->fetchAssoc();
 }
 
 /**
@@ -104,9 +112,50 @@ function zcf_lookup_form_validate($form, &$form_state) {
  * The submit handler for our zipcode lookup form.
  */
 function zcf_lookup_form_submit($form, &$form_state) {
-  drupal_set_message('You submitted the zipcode: ' .$form_state['values']['zipcode']);
+  // Lookup the contact details for the zipcode the user entered.
+  $contact = db_select('zcf', 'z')
+    ->fields('z')
+    ->condition('zipcode', $form_state['values']['zipcode'], '=')
+    ->execute()
+    ->fetchAssoc();
+
+  if (is_array($contact)) {
+    $contact_id = $contact['zcf_info_id'];
+
+    $contact_details = db_select('zcf_info', 'z')
+      ->fields('z')
+      ->condition('zcf_info_id', $contact_id, '=')
+      ->execute()
+      ->fetchAssoc();
+    // If we found contact details let the user see them.
+    drupal_set_message('The contact info for zipcode: ' .$form_state['values']['zipcode'] .' is ' .$contact_details['name'] .' ' .$contact_details['phone']);
+  }
+  else {
+    drupal_set_message('We are unable to find a contact serving the ' .$form_state['values']['zipcode'] .' zipcode.');
+  }
 }
 
 
-// hook_block_info
-// hook_block_view
+/**
+ * Implements hook_block_info().
+ */
+function zcf_block_info() {
+  return array(
+    'zcf_lookup' => array(
+      'info' => t('The zipcode contact lookup form'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function zcf_block_view($delta = '') {
+  if ($delta == 'zcf_lookup') {
+    $block['subject'] = 'Zipcode Lookup';
+    // Put the contents of our lookup form in the content area of the block.
+    $block['content'] = drupal_get_form('zcf_lookup_form');
+  }
+
+  return $block;
+}
